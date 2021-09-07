@@ -1,0 +1,11 @@
+__pycache__
+.ipynb_checkpoints
+.pytest_cache
+.python-version
+venv
+data_bak
+data/1_preprocessed
+data/2_embeddings/*.bak
+data/3_models/*.bak
+data/4_outputs/*.bak
+playground.ipynb
