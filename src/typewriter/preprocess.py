@@ -1,7 +1,7 @@
 import click
 import os
 import random
-from typewriter.utils.hangul import encode
+from typewriter.tools.hangul import encode
 
 
 @click.command()

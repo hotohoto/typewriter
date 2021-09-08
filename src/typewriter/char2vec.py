@@ -1,6 +1,6 @@
 import click
 import os
-from typewriter.utils.hangul import encode
+from typewriter.tools.hangul import encode
 
 
 @click.command()

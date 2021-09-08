@@ -1,5 +1,5 @@
 import hgtk
-from typewriter.utils.hangul import (
+from typewriter.tools.hangul import (
     DEFAULT_HANGUL_TERMINATOR,
     _put_hangul_terminators,
     decode,
