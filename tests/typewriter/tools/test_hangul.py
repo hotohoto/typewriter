@@ -7,7 +7,7 @@ from typewriter.tools.hangul import (
 )
 
 
-class TestPreprocess:
+class TestHangul:
     @staticmethod
     def test_encode_decode():
         text_original = "ㄱa나b당c 까마귀 학교종이 땡땡땡! hello world 1234567890 ㅋㅋ!"

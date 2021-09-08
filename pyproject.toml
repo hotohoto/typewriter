@@ -28,7 +28,8 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-preproc = "typewriter.preprocess:preprocess"
+preproc = "typewriter.commands.preprocess:run_preprocess"
+char2vec = "typewriter.commands.char2vec:run_char2vec"
 
 [tool.coverage.paths]
 source = ["src"]

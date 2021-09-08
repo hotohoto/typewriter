@@ -1,10 +1,8 @@
-import click
 import os
 import random
 from typewriter.tools.hangul import encode
 
 
-@click.command()
 def preprocess():
     random.seed(0)
 
