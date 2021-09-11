@@ -80,11 +80,13 @@ def _put_hangul_terminators(
     return "".join(result)
 
 
-def encode(text):
-    # decompose without hangul terminators
-    return hgtk.text.decompose(text, compose_code="")
+class DecomposeHangul:
+    def __call__(self, text):
+        # decompose without hangul terminators
+        return hgtk.text.decompose(text, compose_code="")
 
 
-def decode(encoded_text):
-    # restore original text
-    return hgtk.text.compose(_put_hangul_terminators(encoded_text))
+class ComposeHangul:
+    def __call__(self, encoded_text):
+        # restore original text
+        return hgtk.text.compose(_put_hangul_terminators(encoded_text))

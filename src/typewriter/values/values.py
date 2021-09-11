@@ -1,0 +1,5 @@
+END_OF_TEXT = "\0"
+
+SPECIAL_CHARACTERS = {
+    END_OF_TEXT,
+}

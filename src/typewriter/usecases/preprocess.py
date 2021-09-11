@@ -1,6 +1,6 @@
 import os
 import random
-from typewriter.tools.hangul import encode
+from typewriter.transforms.hangul import DecomposeHangul
 
 
 def preprocess():
@@ -22,7 +22,8 @@ def preprocess():
         ]
 
     digit = len(str(len(all_source_paths)))
+    transform = DecomposeHangul()
     for idx, src_path in enumerate(all_source_paths):
         output_path = os.path.join(output_dir, f"{str(idx).zfill(digit)}.txt")
         with open(src_path) as fin, open(output_path, "w") as fout:
-            fout.write(encode(fin.read()))
+            fout.write(transform(fin.read().strip() + "\n"))

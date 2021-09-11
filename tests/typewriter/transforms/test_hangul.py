@@ -1,21 +1,23 @@
 import hgtk
-from typewriter.tools.hangul import (
+from typewriter.transforms.hangul import (
     DEFAULT_HANGUL_TERMINATOR,
     _put_hangul_terminators,
-    decode,
-    encode,
+    ComposeHangul,
+    DecomposeHangul,
 )
 
 
 class TestHangul:
     @staticmethod
     def test_encode_decode():
+        decomposer = DecomposeHangul()
         text_original = "ㄱa나b당c 까마귀 학교종이 땡땡땡! hello world 1234567890 ㅋㅋ!"
-        text_encoded = encode(text_original)
+        text_encoded = decomposer(text_original)
         assert DEFAULT_HANGUL_TERMINATOR not in text_encoded
         assert text_encoded != text_original
 
-        text_decoded = decode(text_encoded)
+        composer = ComposeHangul()
+        text_decoded = composer(text_encoded)
         assert text_original == text_decoded
 
     @staticmethod
