@@ -17,6 +17,7 @@ def char2vec():
     )
 
     for batch in data_loader:
+        # TODO train char2vec encoder
         print(batch)
         print(batch.shape)
         break
