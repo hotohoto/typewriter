@@ -1,14 +1,14 @@
 import click
-from typewriter.usecases.char2vec import build_encodings, load_encodings, save_encodings
+from typewriter.usecases.char2vec import build_embeddings, load_embeddings, save_embeddings
 
 
 @click.command()
 def run_char2vec():
-    encodings = load_encodings()
-    if encodings is None:
-        print("Building new encodings...")
-        encodings = build_encodings()
-        save_encodings(encodings)
+    embeddings = load_embeddings()
+    if embeddings is None:
+        print("Building new embeddings...")
+        embeddings = build_embeddings()
+        save_embeddings(embeddings)
     else:
-        print("Updating the existing encodings...")
-        build_encodings(encodings=encodings)
+        print("Updating the existing embeddings...")
+        build_embeddings(embeddings=embeddings)

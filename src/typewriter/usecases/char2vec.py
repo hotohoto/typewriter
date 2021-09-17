@@ -9,21 +9,21 @@ from torch.utils.data import DataLoader
 from typewriter.datasets.skip_gram_dataset import SkipGramDataset
 from typewriter.usecases.characters import get_characters
 
-PATH_TO_ENCODINGS = pathlib.Path("data/2_characters/embeddings.json")
+PATH_TO_EMBEDDINGS = pathlib.Path("data/2_characters/embeddings.json")
 
 
-def get_encodings():
-    encodings = load_encodings()
-    if encodings:
-        return encodings
+def get_embeddings():
+    embeddings = load_embeddings()
+    if embeddings:
+        return embeddings
 
-    encodings = build_encodings()
-    save_encodings(encodings)
+    embeddings = build_embeddings()
+    save_embeddings(embeddings)
 
-    return encodings
+    return embeddings
 
 
-def build_encodings(encoding_size=16, n_epochs=1, encodings=None):
+def build_embeddings(encoding_size=16, n_epochs=1, embeddings=None):
     characters = get_characters()
     data_loader = DataLoader(
         SkipGramDataset(
@@ -36,9 +36,9 @@ def build_encodings(encoding_size=16, n_epochs=1, encodings=None):
         shuffle=True,
     )
 
-    if encodings:
-        w_in = encodings["w_in"]
-        w_out = encodings["w_out"]
+    if embeddings:
+        w_in = embeddings["w_in"]
+        w_out = embeddings["w_out"]
         model = Char2Vec(len(characters), encoding_size, w_in=w_in, w_out=w_out)
     else:
         model = Char2Vec(len(characters), encoding_size)
@@ -69,44 +69,70 @@ def build_encodings(encoding_size=16, n_epochs=1, encodings=None):
     }
 
 
-def load_encodings():
-    if not os.path.isfile(PATH_TO_ENCODINGS):
+def load_embeddings():
+    if not os.path.isfile(PATH_TO_EMBEDDINGS):
         return None
 
-    with open(PATH_TO_ENCODINGS) as f:
+    with open(PATH_TO_EMBEDDINGS) as f:
         return json.loads(f.read())
 
 
-def save_encodings(encodings):
-    assert encodings
-    assert isinstance(encodings, dict)
-    for c in encodings:
+def save_embeddings(embeddings):
+    assert embeddings
+    assert isinstance(embeddings, dict)
+    for c in embeddings:
         assert isinstance(c, str)
         assert c
 
-    with open(PATH_TO_ENCODINGS, "w") as f:
-        f.write(json.dumps(encodings))
+    with open(PATH_TO_EMBEDDINGS, "w") as f:
+        f.write(json.dumps(embeddings))
+
+
+def closest(query_embeddings, embeddings: dict):
+    characters = embeddings["characters"]
+    w_in = np.array(embeddings["w_in"])
+    assert query_embeddings is not None
+    query_embeddings = (
+        query_embeddings if isinstance(query_embeddings, np.ndarray) else np.array(query_embeddings)
+    )
+    embedding_size = w_in.shape[0]
+    assert query_embeddings.shape[-1] == embedding_size
+
+    target_shape = query_embeddings.shape[:-1]
+    query_embeddings = query_embeddings.reshape(-1, embedding_size)
+
+    results = []
+    for e in query_embeddings:
+        diff = np.array(embeddings["w_in"]).T - e
+        idx = np.argmin((diff ** 2).sum(axis=1), axis=0)
+        results.append(characters[idx])
+
+    return np.array(results).reshape(target_shape)
 
 
 class Char2Vec(torch.nn.Module):
-    def __init__(self, n_encodings, encoding_size, w_in=None, w_out=None, device=None, dtype=None):
+    def __init__(self, n_embeddings, encoding_size, w_in=None, w_out=None, device=None, dtype=None):
         super().__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
-        self.n_encodings = n_encodings
+        self.n_embeddings = n_embeddings
         self.encoding_size = encoding_size
 
         if w_in:
             assert len(w_in) == encoding_size
             self.w_in = torch.nn.Parameter(torch.tensor(w_in, **factory_kwargs))
         else:
-            torch.nn.Parameter(torch.empty((encoding_size, n_encodings), **factory_kwargs))
+            self.w_in = torch.nn.Parameter(
+                torch.empty((encoding_size, n_embeddings), **factory_kwargs)
+            )
             torch.nn.init.kaiming_uniform_(self.w_in, a=math.sqrt(5))
 
         if w_out:
-            assert len(w_out) == n_encodings
+            assert len(w_out) == n_embeddings
             self.w_out = torch.nn.Parameter(torch.tensor(w_out, **factory_kwargs))
         else:
-            torch.nn.Parameter(torch.empty((n_encodings, encoding_size), **factory_kwargs))
+            self.w_out = torch.nn.Parameter(
+                torch.empty((n_embeddings, encoding_size), **factory_kwargs)
+            )
             torch.nn.init.kaiming_uniform_(self.w_out, a=math.sqrt(5))
 
     def forward(self, x, mask=None):
