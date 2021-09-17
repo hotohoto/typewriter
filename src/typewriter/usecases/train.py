@@ -1,22 +1,34 @@
+import json
 import pathlib
 
 from torch.utils.data import DataLoader, Dataset
+from typewriter.transforms.character_to_embeddings import CharacterToEmbedding
 from typewriter.transforms.compose import Compose
 from typewriter.transforms.mark_end import MarkEnd
-from typewriter.transforms.onehot import OneHot
-from typewriter.transforms.skip_gram import SkipGram
-from typewriter.usecases.characters import get_characters
+from typewriter.usecases.char2vec import get_embeddings
+
+PATH_TO_GENERATOR = pathlib.Path("data/3_models/generator.json")
 
 
-def train_generator():
-    characters = get_characters()
+def get_generator():
+    generator = load_generator()
+    if generator:
+        return generator
+
+    generator = train()
+    save_generator(generator)
+
+    return generator
+
+
+def train():
+    embeddings = get_embeddings()
     data_loader = DataLoader(
         TextDataset(
             transform=Compose(
                 [
                     MarkEnd(),
-                    OneHot(characters),
-                    SkipGram(left=3, right=3),
+                    CharacterToEmbedding(embeddings)
                 ]
             )
         ),
@@ -28,6 +40,27 @@ def train_generator():
         print(batch)
         print(batch.shape)
         break
+
+    return generator
+
+
+def load_generator():
+    if not PATH_TO_GENERATOR.is_file():
+        return None
+
+    with open(PATH_TO_GENERATOR) as f:
+        return json.loads(f.read())
+
+
+def save_generator(generator):
+    assert generator
+    assert isinstance(generator, dict)
+    for c in generator:
+        assert isinstance(c, str)
+        assert c
+
+    with open(PATH_TO_GENERATOR, "w") as f:
+        f.write(json.dumps(generator))
 
 
 class TextDataset(Dataset):
