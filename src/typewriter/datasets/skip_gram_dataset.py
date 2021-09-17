@@ -40,7 +40,7 @@ class SkipGramDataset(Dataset):
 
         self.text_end_indices = text_end_indices
 
-    @lru_cache(maxsize=2)
+    @lru_cache(maxsize=1024 * 3)
     def _get_transformed_text(self, path):
         with open(path) as f:
             return self.transform(f.read())
@@ -54,7 +54,8 @@ class SkipGramDataset(Dataset):
 
     def __getitem__(self, index):
         path, offset = self._find_file(index)
-        return self._get_transformed_text(path)[offset]
+        context, text = self._get_transformed_text(path)
+        return context[offset], text[offset]
 
     def __len__(self):
         return self.text_end_indices[-1]

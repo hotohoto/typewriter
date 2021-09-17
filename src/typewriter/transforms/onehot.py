@@ -11,4 +11,4 @@ class OneHot(object):
 
     def __call__(self, text):
         indices = np.array([self.char2idx[c] for c in text])
-        return np.eye(len(self.characters))[indices]
+        return np.eye(len(self.characters), dtype=np.float32)[indices]

@@ -1,9 +1,10 @@
 import json
 import os
+import pathlib
 
-from typewriter.values.values import SPECIAL_CHARACTERS
+from typewriter.values.values import CONTROL_CHARACTERS
 
-PATH_TO_CHARACTERS = os.path.join("data", "2_characters", "characters.json")
+PATH_TO_CHARACTERS = pathlib.Path("data/2_characters/characters.json")
 
 
 def get_characters():
@@ -18,7 +19,7 @@ def get_characters():
 
 
 def build_characters():
-    characters = SPECIAL_CHARACTERS.copy()
+    characters = CONTROL_CHARACTERS.copy()
     input_dir = os.path.join("data", "1_preprocessed")
     files = os.listdir(input_dir)
     file_paths = [os.path.join(input_dir, f) for f in files]
