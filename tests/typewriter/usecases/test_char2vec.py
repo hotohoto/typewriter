@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from typewriter.usecases.char2vec import Char2Vec, build_embeddings, closest
+from typewriter.usecases.char2vec import Char2Vec, closest, encode, train_embeddings
 
 
 class TestChar2Vec:
@@ -56,7 +56,28 @@ class TestChar2Vec:
         )
         assert (result == np.array(["3", "2", "4"])).all()
 
+    @staticmethod
+    def test_encode():
+        w_in = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]]).T.tolist()
+        embeddings = {
+            "characters": ["1", "2", "3", "4"],
+            "w_in": w_in,
+            "w_out": np.random.rand(3, 4).tolist(),
+        }
+        w_in = np.array(w_in)
+        result = encode(text="1", embeddings=embeddings)
+        assert (result == w_in[:, 0].T).all()
+
+        result = encode(text="2", embeddings=embeddings)
+        assert (result == w_in[:, 1].T).all()
+
+        result = encode(text="3", embeddings=embeddings)
+        assert (result == w_in[:, 2].T).all()
+
+        result = encode(text="324", embeddings=embeddings)
+        assert (result == w_in[:, [2, 1, 3]].T).all()
+
     @pytest.mark.skip(reason="takes too long and updates embeddings saved")
     @staticmethod
-    def test_build_embeddings():
-        build_embeddings(encoding_size=3, n_epochs=1)
+    def test_train_embeddings():
+        train_embeddings(encoding_size=3, n_epochs=1)

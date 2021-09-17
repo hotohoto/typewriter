@@ -17,13 +17,13 @@ def get_embeddings():
     if embeddings:
         return embeddings
 
-    embeddings = build_embeddings()
+    embeddings = train_embeddings()
     save_embeddings(embeddings)
 
     return embeddings
 
 
-def build_embeddings(encoding_size=16, n_epochs=1, embeddings=None):
+def train_embeddings(encoding_size=16, n_epochs=1, embeddings=None):
     characters = get_characters()
     data_loader = DataLoader(
         SkipGramDataset(
@@ -88,7 +88,7 @@ def save_embeddings(embeddings):
         f.write(json.dumps(embeddings))
 
 
-def closest(query_embeddings, embeddings: dict):
+def closest(query_embeddings, embeddings: dict) -> np.ndarray:
     characters = embeddings["characters"]
     w_in = np.array(embeddings["w_in"])
     assert query_embeddings is not None
@@ -108,6 +108,14 @@ def closest(query_embeddings, embeddings: dict):
         results.append(characters[idx])
 
     return np.array(results).reshape(target_shape)
+
+
+def encode(text, embeddings: dict) -> np.ndarray:
+    characters = embeddings["characters"]
+    mapping = {c: i for i, c in enumerate(characters)}
+    indices = [mapping[c] for c in text]
+    w_in = np.array(embeddings["w_in"])
+    return w_in[:, indices].T
 
 
 class Char2Vec(torch.nn.Module):
