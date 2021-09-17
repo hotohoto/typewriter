@@ -4,7 +4,6 @@
 
 ## Features
 
-- dataset downloader
 - preprocessor
   - decompose Korean
 - postprocessor
