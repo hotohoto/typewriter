@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import torch
-from typewriter.usecases.char2vec import Char2Vec, closest, encode, train_embeddings
+from typewriter.usecases.char2vec import Char2Vec, train_embeddings
 
 
 class TestChar2Vec:
@@ -32,50 +32,6 @@ class TestChar2Vec:
         output_tensor = model(input_tensor, mask=mask)
 
         assert input_tensor[:, mask].shape == output_tensor.shape
-
-    @staticmethod
-    def test_closest():
-        w_in = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]]).T.tolist()
-        embeddings = {
-            "characters": ["1", "2", "3", "4"],
-            "w_in": w_in,
-            "w_out": np.random.rand(3, 4).tolist(),
-        }
-        result = closest(query_embeddings=np.array([1.1, 1.6, 0.8]), embeddings=embeddings)
-        assert result == np.array("1")
-
-        result = closest(query_embeddings=np.array([2.1, 2.6, 1.8]), embeddings=embeddings)
-        assert result == np.array("2")
-
-        result = closest(query_embeddings=np.array([3.1, 3.6, 2.8]), embeddings=embeddings)
-        assert result == np.array("3")
-
-        result = closest(
-            query_embeddings=np.array([[3.1, 3.6, 2.8], [2.1, 2.6, 1.8], [4.1, 4.6, 3.8]]),
-            embeddings=embeddings,
-        )
-        assert (result == np.array(["3", "2", "4"])).all()
-
-    @staticmethod
-    def test_encode():
-        w_in = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]]).T.tolist()
-        embeddings = {
-            "characters": ["1", "2", "3", "4"],
-            "w_in": w_in,
-            "w_out": np.random.rand(3, 4).tolist(),
-        }
-        w_in = np.array(w_in)
-        result = encode(text="1", embeddings=embeddings)
-        assert (result == w_in[:, 0].T).all()
-
-        result = encode(text="2", embeddings=embeddings)
-        assert (result == w_in[:, 1].T).all()
-
-        result = encode(text="3", embeddings=embeddings)
-        assert (result == w_in[:, 2].T).all()
-
-        result = encode(text="324", embeddings=embeddings)
-        assert (result == w_in[:, [2, 1, 3]].T).all()
 
     @pytest.mark.skip(reason="takes too long and updates embeddings saved")
     @staticmethod

@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import DataLoader
 from typewriter.datasets.skip_gram_dataset import SkipGramDataset
 from typewriter.usecases.characters import get_characters
+from typewriter.values.embeddings import Embeddings
 
 PATH_TO_EMBEDDINGS = pathlib.Path("data/2_characters/embeddings.json")
 
@@ -23,7 +24,7 @@ def get_embeddings():
     return embeddings
 
 
-def train_embeddings(encoding_size=16, n_epochs=1, embeddings=None):
+def train_embeddings(encoding_size=16, n_epochs=1, embeddings: Embeddings = None):
     characters = get_characters()
     data_loader = DataLoader(
         SkipGramDataset(
@@ -37,8 +38,8 @@ def train_embeddings(encoding_size=16, n_epochs=1, embeddings=None):
     )
 
     if embeddings:
-        w_in = embeddings["w_in"]
-        w_out = embeddings["w_out"]
+        w_in = embeddings.w_in
+        w_out = embeddings.w_out
         model = Char2Vec(len(characters), encoding_size, w_in=w_in, w_out=w_out)
     else:
         model = Char2Vec(len(characters), encoding_size)
@@ -62,11 +63,11 @@ def train_embeddings(encoding_size=16, n_epochs=1, embeddings=None):
             if i % 1000 == 0:
                 print(f"i={i}, mean loss={np.mean(recent_loss_values)}")
                 recent_loss_values = []
-    return {
-        "characters": characters,
-        "w_in": model.w_in.detach().numpy().tolist(),
-        "w_out": model.w_out.detach().numpy().tolist(),
-    }
+    return Embeddings(
+        characters=characters,
+        w_in=model.w_in.detach().numpy(),
+        w_out=model.w_out.detach().numpy(),
+    )
 
 
 def load_embeddings():
@@ -74,48 +75,18 @@ def load_embeddings():
         return None
 
     with open(PATH_TO_EMBEDDINGS) as f:
-        return json.loads(f.read())
+        return Embeddings.from_dict(json.loads(f.read()))
 
 
 def save_embeddings(embeddings):
     assert embeddings
-    assert isinstance(embeddings, dict)
+    assert isinstance(embeddings, Embeddings)
     for c in embeddings:
         assert isinstance(c, str)
         assert c
 
     with open(PATH_TO_EMBEDDINGS, "w") as f:
-        f.write(json.dumps(embeddings))
-
-
-def closest(query_embeddings, embeddings: dict) -> np.ndarray:
-    characters = embeddings["characters"]
-    w_in = np.array(embeddings["w_in"])
-    assert query_embeddings is not None
-    query_embeddings = (
-        query_embeddings if isinstance(query_embeddings, np.ndarray) else np.array(query_embeddings)
-    )
-    embedding_size = w_in.shape[0]
-    assert query_embeddings.shape[-1] == embedding_size
-
-    target_shape = query_embeddings.shape[:-1]
-    query_embeddings = query_embeddings.reshape(-1, embedding_size)
-
-    results = []
-    for e in query_embeddings:
-        diff = np.array(embeddings["w_in"]).T - e
-        idx = np.argmin((diff ** 2).sum(axis=1), axis=0)
-        results.append(characters[idx])
-
-    return np.array(results).reshape(target_shape)
-
-
-def encode(text, embeddings: dict) -> np.ndarray:
-    characters = embeddings["characters"]
-    mapping = {c: i for i, c in enumerate(characters)}
-    indices = [mapping[c] for c in text]
-    w_in = np.array(embeddings["w_in"])
-    return w_in[:, indices].T
+        f.write(json.dumps(embeddings.to_dict()))
 
 
 class Char2Vec(torch.nn.Module):
