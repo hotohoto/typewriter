@@ -2,43 +2,31 @@ import numpy as np
 
 
 class SkipGram(object):
-    def __init__(self, left=1, skip=1, right=1):
-        assert left > 0
-        assert skip > 0
-        assert right > 0
-        self.left = left
-        self.skip = skip
-        self.right = right
+    def __init__(self, window=1):
+        assert window > 0
+        self.window = window
 
-    @property
-    def window_size(self):
-        return self.left + self.skip + self.right
-
-    @property
-    def size(self):
-        return self.left + self.right
-
-    def length(self, seqlen):
-        return seqlen - self.window_size + 1
+    def output_length(self, seqlen):
+        return self.window * (2 * seqlen - self.window - 1)
 
     def __call__(self, sequence: np.ndarray):
-        assert len(sequence) >= self.window_size
-        context_start_index = np.array(
-            list(range(self.left)) + list(range(self.left + self.skip, self.window_size)),
-            dtype=np.float32,
-        )
-        text_start_index = np.array(list(range(self.left, self.left + self.skip)), dtype=np.float32)
+        seqlen = len(sequence)
+        assert seqlen >= self.window + 1
 
-        length = self.length(len(sequence))
+        outlen = self.output_length(seqlen)
 
-        context_indices = np.empty((length, self.size), dtype=int)
-        text_indices = np.empty((length, self.skip), dtype=int)
+        text_indices = []
+        context_indices = []
 
-        for i in range(length):
-            context_indices[i] = context_start_index + i
-            text_indices[i] = text_start_index + i
+        for i_text in range(seqlen):
+            for i_context in range(max(i_text - self.window, 0), i_text):
+                text_indices.append(i_text)
+                context_indices.append(i_context)
+            for i_context in range(i_text + 1, min(i_text + 1 + self.window, seqlen)):
+                text_indices.append(i_text)
+                context_indices.append(i_context)
 
-        context = sequence[context_indices.flatten()].reshape(length, self.size, -1).sum(axis=1)
-        text = sequence[text_indices.flatten()].reshape(length, self.skip, -1).sum(axis=1)
+        text = sequence[text_indices].reshape(outlen, -1)
+        context = sequence[context_indices].reshape(outlen, -1)
 
-        return context, text
+        return text, context

@@ -12,3 +12,7 @@ def run_char2vec():
     else:
         print("Updating the existing embeddings...")
         train_embeddings(embeddings=embeddings)
+
+
+if __name__ == "__main__":
+    run_char2vec()

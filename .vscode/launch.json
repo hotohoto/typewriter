@@ -2,6 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "char2vec",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/typewriter/commands/char2vec.py",
+            "console": "integratedTerminal",
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

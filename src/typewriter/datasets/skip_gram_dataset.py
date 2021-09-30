@@ -9,7 +9,7 @@ from typewriter.transforms.skip_gram import SkipGram
 
 
 class SkipGramDataset(Dataset):
-    def __init__(self, base_dir=None, characters=None, left=1, skip=1, right=1):
+    def __init__(self, base_dir=None, characters=None, window=1):
         super().__init__()
 
         base_dir = pathlib(base_dir) if base_dir else pathlib.Path("data/1_preprocessed")
@@ -20,7 +20,7 @@ class SkipGramDataset(Dataset):
         assert file_paths
         self.file_paths = file_paths
 
-        skip_gram = SkipGram(left=left, skip=skip, right=right)
+        skip_gram = SkipGram(window=window)
         self.transform = Compose(
             [
                 MarkEnd(),
@@ -33,7 +33,7 @@ class SkipGramDataset(Dataset):
         prev_end = 0
         for p in file_paths:
             with open(p) as f:
-                length = skip_gram.length(len(f.read()))
+                length = skip_gram.output_length(len(f.read()))
                 end = prev_end + length
                 text_end_indices.append(end)
                 prev_end = end

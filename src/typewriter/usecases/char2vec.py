@@ -28,9 +28,7 @@ def train_embeddings(encoding_size=16, n_epochs=1, embeddings: Embeddings = None
     data_loader = DataLoader(
         SkipGramDataset(
             characters=characters,
-            left=2,
-            skip=1,
-            right=2,
+            window=2,
         ),
         batch_size=64,
         shuffle=True,
@@ -50,8 +48,9 @@ def train_embeddings(encoding_size=16, n_epochs=1, embeddings: Embeddings = None
 
     for epoch in range(n_epochs):
         print(f"epoch = {epoch}")
-        for i, (context, text) in enumerate(data_loader):
-            mask = (context + text).sum(axis=0).bool()
+        for i, (text, context) in enumerate(data_loader):
+            mask = (text + context).sum(axis=0).bool()
+            # TODO append negative samples to mask
             prediction = model(text, mask)
             loss = criterion(prediction, context[:, mask])
             optimizer.zero_grad()
@@ -89,13 +88,15 @@ def save_embeddings(embeddings):
 
 
 class Char2Vec(torch.nn.Module):
-    def __init__(self, n_embeddings, encoding_size, w_in=None, w_out=None, device=None, dtype=None):
+    def __init__(
+        self, n_embeddings: int, encoding_size: int, w_in=None, w_out=None, device=None, dtype=None
+    ):
         super().__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
         self.n_embeddings = n_embeddings
         self.encoding_size = encoding_size
 
-        if w_in:
+        if w_in is not None:
             assert len(w_in) == encoding_size
             self.w_in = torch.nn.Parameter(torch.tensor(w_in, **factory_kwargs))
         else:
@@ -104,7 +105,7 @@ class Char2Vec(torch.nn.Module):
             )
             torch.nn.init.kaiming_uniform_(self.w_in, a=math.sqrt(5))
 
-        if w_out:
+        if w_out is not None:
             assert len(w_out) == n_embeddings
             self.w_out = torch.nn.Parameter(torch.tensor(w_out, **factory_kwargs))
         else:
