@@ -1,6 +1,5 @@
 import json
 import math
-import os
 import pathlib
 
 import numpy as np
@@ -71,7 +70,7 @@ def train_embeddings(encoding_size=16, n_epochs=1, embeddings: Embeddings = None
 
 
 def load_embeddings():
-    if not os.path.isfile(PATH_TO_EMBEDDINGS):
+    if not PATH_TO_EMBEDDINGS.is_file():
         return None
 
     with open(PATH_TO_EMBEDDINGS) as f:

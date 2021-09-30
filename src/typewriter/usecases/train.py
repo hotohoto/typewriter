@@ -24,14 +24,7 @@ def get_generator():
 def train():
     embeddings = get_embeddings()
     data_loader = DataLoader(
-        TextDataset(
-            transform=Compose(
-                [
-                    MarkEnd(),
-                    CharacterToEmbedding(embeddings)
-                ]
-            )
-        ),
+        TextDataset(transform=Compose([MarkEnd(), CharacterToEmbedding(embeddings)])),
         batch_size=1,
         shuffle=True,
     )
