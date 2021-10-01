@@ -13,3 +13,7 @@ def run_train():
     else:
         print("Updating the existing generator...")
         train(generator=generator)
+
+
+if __name__ == "__main__":
+    run_train()

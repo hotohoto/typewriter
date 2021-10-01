@@ -1,10 +1,9 @@
-import typing as t
-
 import numpy as np
+from typewriter.values.characters import Characters
 
 
 class Embeddings:
-    def __init__(self, characters: t.List[str], w_in: np.ndarray, w_out: np.ndarray):
+    def __init__(self, characters: Characters, w_in: np.ndarray, w_out: np.ndarray):
         self.characters = characters.copy()
         self.w_in = np.array(w_in)
         self.w_out = np.array(w_out)
@@ -23,22 +22,23 @@ class Embeddings:
         query_embeddings = query_embeddings.reshape(-1, embedding_size)
 
         results = []
+        chars = self.characters.list()
         for e in query_embeddings:
             diff = np.array(self.w_in).T - e
             idx = np.argmin((diff ** 2).sum(axis=1), axis=0)
-            results.append(self.characters[idx])
+            results.append(chars[idx])
 
         return np.array(results).reshape(target_shape)
 
     def encode(self, text) -> np.ndarray:
-        mapping = {c: i for i, c in enumerate(self.characters)}
+        mapping = {c: i for i, c in enumerate(self.characters.list())}
         indices = [mapping[c] for c in text]
         w_in = np.array(self.w_in)
         return w_in[:, indices].T
 
     def to_dict(self):
         return {
-            "characters": self.characters,
+            "characters": self.characters.to_dict(),
             "w_in": self.w_in.tolist(),
             "w_out": self.w_out.tolist(),
         }
@@ -52,7 +52,7 @@ class Embeddings:
     @staticmethod
     def from_dict(data):
         return Embeddings(
-            characters=data["characters"],
+            characters=Characters.from_dict(data["characters"]),
             w_in=data["w_in"],
             w_out=data["w_out"],
         )

@@ -1,4 +1,5 @@
 import numpy as np
+from typewriter.values.characters import Characters
 from typewriter.values.embeddings import Embeddings
 
 
@@ -8,7 +9,9 @@ class TestEmbeddings:
         w_in = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]]).T.tolist()
         embeddings = Embeddings.from_dict(
             {
-                "characters": ["1", "2", "3", "4"],
+                "characters": Characters(
+                    {"1": 1 / 4, "2": 1 / 4, "3": 1 / 4, "4": 1 / 4}
+                ).to_dict(),
                 "w_in": w_in,
                 "w_out": np.random.rand(3, 4).tolist(),
             }
@@ -32,7 +35,9 @@ class TestEmbeddings:
         w_in = np.array([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4]]).T.tolist()
         embeddings = Embeddings.from_dict(
             {
-                "characters": ["1", "2", "3", "4"],
+                "characters": Characters(
+                    {"1": 1 / 4, "2": 1 / 4, "3": 1 / 4, "4": 1 / 4}
+                ).to_dict(),
                 "w_in": w_in,
                 "w_out": np.random.rand(3, 4).tolist(),
             }

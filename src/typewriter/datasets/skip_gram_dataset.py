@@ -6,10 +6,11 @@ from typewriter.transforms.compose import Compose
 from typewriter.transforms.mark_end import MarkEnd
 from typewriter.transforms.onehot import OneHot
 from typewriter.transforms.skip_gram import SkipGram
+from typewriter.values.characters import Characters
 
 
 class SkipGramDataset(Dataset):
-    def __init__(self, base_dir=None, characters=None, window=1):
+    def __init__(self, base_dir=None, characters: Characters = None, window=1):
         super().__init__()
 
         base_dir = pathlib(base_dir) if base_dir else pathlib.Path("data/1_preprocessed")
