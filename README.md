@@ -108,6 +108,7 @@ python src/main.py
 (blog)
 - https://towardsdatascience.com/besides-word-embedding-why-you-need-to-know-character-embedding-6096a34a3b10
   - https://github.com/makcedward/nlp/blob/master/sample/nlp-character_embedding.ipynb
+- http://mccormickml.com/2017/01/11/word2vec-tutorial-part-2-negative-sampling/
 
 (datasets)
 - https://github.com/jihunkim625/201500844_Ji-Hun-Kim_Korean-song-lyrics-analysis

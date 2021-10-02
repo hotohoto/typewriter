@@ -3,7 +3,9 @@ import math
 import pathlib
 
 import numpy as np
+import runstats
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from typewriter.datasets.skip_gram_dataset import SkipGramDataset
 from typewriter.usecases.characters import get_characters
@@ -23,14 +25,19 @@ def get_embeddings():
     return embeddings
 
 
-def train_embeddings(encoding_size=16, n_epochs=1, embeddings: Embeddings = None):
+def train_embeddings(encoding_size=16, n_epochs=1, embeddings: Embeddings = None, t=0.05):
+    np.random.seed(0)
+    torch.manual_seed(0)
+
     characters = get_characters()
+
+    batch_size = 64
     data_loader = DataLoader(
         SkipGramDataset(
             characters=characters,
             window=2,
         ),
-        batch_size=64,
+        batch_size=batch_size,
         shuffle=True,
     )
 
@@ -41,26 +48,64 @@ def train_embeddings(encoding_size=16, n_epochs=1, embeddings: Embeddings = None
     else:
         model = Char2Vec(len(characters), encoding_size)
 
-    criterion = torch.nn.MSELoss()
+    def criterion(logit: torch.Tensor, target: torch.Tensor):
+        return -(
+            target * torch.log(F.sigmoid(logit)) + (1 - target) * torch.log(F.sigmoid(-logit))
+        ).mean()
+
     optimizer = torch.optim.Adam(model.parameters())
 
-    recent_loss_values = []
+    stats = runstats.Statistics()
+
+    character_list = characters.list()
+
+    word_probs = np.array([characters.probs[c] for c in character_list])
+
+    negative_sampling_probs = word_probs ** (3 / 4)
+    negative_sampling_probs *= negative_sampling_probs.sum()
+
+    # probs to discard samples for each character
+    probs_to_discard = 1 - (t / (word_probs + np.finfo(float).eps)) ** 0.5
+    probs_to_discard[probs_to_discard < 0] = 0
 
     for epoch in range(n_epochs):
         print(f"epoch = {epoch}")
         for i, (text, context) in enumerate(data_loader):
-            mask = (text + context).sum(axis=0).bool()
-            # TODO append negative samples to mask
-            prediction = model(text, mask)
-            loss = criterion(prediction, context[:, mask])
+            batch_size = len(text)
+
+            # subsampling
+            chars_to_discard = np.random.binomial(1, p=probs_to_discard).astype(bool)
+            rows_to_keep = ~(
+                (
+                    (text.bool() & chars_to_discard).any(axis=1)
+                    | (context.bool() & chars_to_discard).any(axis=1)
+                ).bool()
+            )
+            if not rows_to_keep.any():
+                continue
+            text = text[rows_to_keep]
+            context = context[rows_to_keep]
+
+            text_mask = text.sum(axis=0).bool()
+
+            # negative sampling
+            context_mask = context.sum(axis=0).bool()
+            context_mask |= np.random.binomial(1, p=negative_sampling_probs)
+
+            # train
+            logit = model(text, text_mask, context_mask)
+            loss = criterion(logit, context[:, context_mask])
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            recent_loss_values.append(loss.item())
+            stats.push(loss.item())
 
             if i % 1000 == 0:
-                print(f"i={i}, mean loss={np.mean(recent_loss_values)}")
-                recent_loss_values = []
+                print(
+                    f"i={i}, loss mean={stats.mean()}, max={stats.maximum()}, min={stats.minimum()}"
+                )
+                stats.clear()
+
     return Embeddings(
         characters=characters,
         w_in=model.w_in.detach().numpy(),
@@ -101,7 +146,7 @@ class Char2Vec(torch.nn.Module):
             self.w_in = torch.nn.Parameter(torch.tensor(w_in, **factory_kwargs))
         else:
             self.w_in = torch.nn.Parameter(
-                torch.empty((encoding_size, n_embeddings), **factory_kwargs)
+                torch.empty((n_embeddings, encoding_size), **factory_kwargs)
             )
             torch.nn.init.kaiming_uniform_(self.w_in, a=math.sqrt(5))
 
@@ -114,11 +159,19 @@ class Char2Vec(torch.nn.Module):
             )
             torch.nn.init.kaiming_uniform_(self.w_out, a=math.sqrt(5))
 
-    def forward(self, x, mask=None):
-        if mask is None:
-            x = self.w_in @ x.T
-            x = self.w_out @ x
+    def forward(self, x, text_mask=None, context_mask=None):
+        # x.shape = (batch_size, n_embeddings)
+        if text_mask is None:
+            x = x @ self.w_in
         else:
-            x = self.w_in[:, mask] @ x[:, mask].T
-            x = self.w_out[mask, :] @ x
-        return x.T
+            x = x[:, text_mask] @ self.w_in[text_mask, :]
+
+        # x.shape = (batch_size, encoding_size)
+        if context_mask is None:
+            x = x @ self.w_out.T
+            # x.shape = (batch_size, n_embeddings)
+        else:
+            x = x @ self.w_out[context_mask, :].T
+            # x.shape = (batch_size, context_mask.sum())
+
+        return x
