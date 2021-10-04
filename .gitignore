@@ -3,7 +3,7 @@ __pycache__
 .pytest_cache
 .python-version
 venv
-data_bak
+_data_bak
 data/1_preprocessed
 data/2_characters/*.bak
 data/3_models/*.bak
