@@ -30,11 +30,9 @@ class SkipGram(object):
         seqlen = len(sequence)
         assert seqlen >= self.window + 1
 
-        outlen = self.output_length(seqlen)
-
         text_indices, context_indices = self.build_indices(seqlen, self.window)
 
-        text = sequence[text_indices].reshape(outlen, -1)
-        context = sequence[context_indices].reshape(outlen, -1)
+        text = sequence[text_indices]
+        context = sequence[context_indices]
 
         return text, context

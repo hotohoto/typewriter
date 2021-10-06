@@ -4,7 +4,7 @@ from functools import lru_cache
 from torch.utils.data.dataset import Dataset
 from typewriter.transforms.compose import Compose
 from typewriter.transforms.mark_end import MarkEnd
-from typewriter.transforms.onehot import OneHot
+from typewriter.transforms.character_index import CharacterIndex
 from typewriter.transforms.skip_gram import SkipGram
 from typewriter.values.characters import Characters
 
@@ -25,7 +25,7 @@ class SkipGramDataset(Dataset):
         self.transform = Compose(
             [
                 MarkEnd(),
-                OneHot(characters),
+                CharacterIndex(characters),
                 skip_gram,
             ]
         )

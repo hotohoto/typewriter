@@ -18,7 +18,7 @@ from typewriter.usecases.char2vec import get_embeddings
 font = fm.FontProperties(fname='data/fonts/NanumGothic-Regular.ttf', size=12)
 
 embeddings = get_embeddings()
-df = pd.DataFrame(embeddings.w_in.T, index=embeddings.characters)
+df = pd.DataFrame(embeddings.w_in, index=embeddings.characters.keys)
 reducer = umap.UMAP(random_state=42).fit(df)
 reduced = pd.DataFrame(reducer.transform(df), index=df.index)
 

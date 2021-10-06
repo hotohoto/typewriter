@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 import torch
 from typewriter.usecases.char2vec import Char2Vec, train_embeddings
@@ -7,31 +6,15 @@ from typewriter.usecases.char2vec import Char2Vec, train_embeddings
 class TestChar2Vec:
     @staticmethod
     def test_char2vec():
-
-        batch_size = 4
-        n_embeddings = 3
+        n_embeddings = 4
         encoding_size = 5
         model = Char2Vec(n_embeddings=n_embeddings, encoding_size=encoding_size)
 
-        input_tensor = torch.zeros(batch_size, n_embeddings)
-        input_tensor[:, 0] = 1
-        output_tensor = model(input_tensor)
+        text_indices = torch.tensor([0, 1, 1, 2, 2, 3], dtype=int)
+        context_indices = torch.tensor([1, 0, 2, 1, 3, 2], dtype=int)
+        logits = model(text_indices, context_indices)
 
-        assert input_tensor.shape == output_tensor.shape
-
-    @staticmethod
-    def test_char2vec_with_mask():
-        batch_size = 4
-        n_embeddings = 3
-        encoding_size = 5
-        model = Char2Vec(n_embeddings=n_embeddings, encoding_size=encoding_size)
-
-        input_tensor = torch.zeros(batch_size, n_embeddings)
-        input_tensor[:, 0] = 1
-        mask = np.array([True, True, False], dtype=bool)
-        output_tensor = model(input_tensor, mask=mask)
-
-        assert input_tensor[:, mask].shape == output_tensor.shape
+        assert context_indices.shape == logits.shape
 
     @pytest.mark.skip(reason="takes too long and updates embeddings saved")
     @staticmethod
